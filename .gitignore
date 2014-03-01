@@ -1,3 +1,4 @@
 *.pyc
 fabfile.py
 keys.txt
+simple_nginx_config

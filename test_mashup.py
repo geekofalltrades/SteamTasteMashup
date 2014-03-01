@@ -3,7 +3,7 @@ import mashup
 import json
 
 
-class TestSteamParser(unittest.testCase):
+class TestSteamParser(unittest.TestCase):
     """When given a json-formatted Steam API, steam_parser should return
     a list of 2-item lists, containing title and time played.
     """
@@ -99,15 +99,21 @@ class TestSteamParser(unittest.testCase):
 }"""
 
     def test_parse_response(self):
+        """Test whether the Steam parser is able to parse json api responses
+        into the correct format.
+        """
         self.assertEqual(mashup.steam_parser(json.loads(self.response)),
             self.expected)
 
     def test_parse_empty_response(self):
+        """Test whether the Steam parser raises the correct exception upon
+        receiving empty input.
+        """
         self.assertRaises(mashup.EmptyError, mashup.steam_parser,
             json.loads(self.empty_response))
 
 
-class TestMetacriticParser(unittest.testCase):
+class TestMetacriticParser(unittest.TestCase):
     """When given a json-formatted metacritic API response, metacritic_parser
     should parse out the game's metascore and return it as an integer.
     """
@@ -130,11 +136,49 @@ class TestMetacriticParser(unittest.testCase):
 """
         self.expected = 96
 
-    def test_metacritic_parser(self):
+    def test_parse_response(self):
+        """Test whether the metatcritic parser returns the expected value
+        in the expected format.
+        """
+        hl_metascore = \
+            mashup.metacritic_parser(json.loads(self.metacritic_response))
+        self.assertTrue(isinstance(hl_metascore, int))
+        self.assertEqual(self.expected, hl_metascore)
 
 
-class TestDetermineTaste(unittest.testCase):
-    pass
+class TestDetermineTaste(unittest.TestCase):
+    """When given an array populated with triplets of game title, hours
+    played, and metascore, should return a weighted average of the meta-
+    score representing playtime.
+    """
+
+    def setUp(self):
+        self.sample_data = [
+            ['Banished', 267, 70],
+            ['Valdis Story: Abyssal City', 183, 80],
+            ['Jazzpunk', 145, 44],
+            ['Teslagrad', 22, 98],
+            ['NaissanceE', 16, 78],
+            ['Descent 2', 10, 82],
+            ['Metal Slug 3', 3, 56],
+            ['Strider', 2, 76],
+        ]
+        self.expected = 68
+        self.nothing_played = [
+            ['Call of Duty: Modern Warfare 2', 0, -9001]
+        ]
+
+    def test_taste_calculation(self):
+        """Test that determine_taste returns the corrected weighted average."""
+        self.assertEqual(self.expected,
+            mashup.determine_taste(self.sample_data))
+
+    def test_no_hours_played(self):
+        """Make sure that determine_taste raises the correct exception if
+        no hours have been played (a situation which shouldn't ever occur).
+        """
+        self.assertRaises(mashup.EmptyError, mashup.determine_taste,
+            self.nothing_played)
 
 
 if __name__ == '__main__':
